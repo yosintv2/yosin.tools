@@ -1,0 +1,68 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { ALL_TOOLS } from '../../data/tools';
+
+export async function getStaticPaths() {
+  return Object.values(ALL_TOOLS)
+    .filter(t => t.slug.startsWith('encode/'))
+    .map(tool => ({
+      params: { slug: tool.slug.replace('encode/', '') },
+      props: { tool }
+    }));
+}
+
+const { tool } = Astro.props;
+const slug = tool.slug.replace('encode/', '');
+
+let methodBody = '';
+switch (slug) {
+  case 'base64-encode':
+    methodBody = `function(i){try{return btoa(unescape(encodeURIComponent(i)))}catch(e){throw new Error('Encoding failed: '+e.message)}}`;
+    break;
+  case 'base64-decode':
+    methodBody = `function(i){try{return decodeURIComponent(escape(atob(i.replace(/\\s/g,''))))}catch(e){throw new Error('Invalid Base64 input: '+e.message)}}`;
+    break;
+  case 'base32-encode':
+    methodBody = `function(i){var r='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',b='',p=0,o='';for(var n=0;n<i.length;n++){b+=('00000000'+(i.charCodeAt(n)).toString(2)).slice(-8)}while(b.length>p){var c=b.slice(p,p+5);p+=5;o+=c.length<5?r[0]:r[parseInt(c,2)]}return o}`;
+    break;
+  case 'base32-decode':
+    methodBody = `function(i){var r='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',b='',o='',t=i.toUpperCase().replace(/[^A-Z2-7]/g,'');for(var n=0;n<t.length;n++){var v=r.indexOf(t[n]);b+=('00000'+v.toString(2)).slice(-5)}for(var p=0;p+8<=b.length;p+=8){var c=parseInt(b.slice(p,p+8),2);if(c)o+=String.fromCharCode(c)}return o}`;
+    break;
+  case 'base58-encode':
+    methodBody = `function(i){var a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',n=0n,b=[],o='';for(var c=0;c<i.length;c++){n=n*256n+BigInt(i.charCodeAt(c))}while(n>0n){b.push(a[Number(n%58n)]);n/=58n}for(var z=0;z<i.length&&i.charCodeAt(z)===0;z++){o+='1'}return o+b.reverse().join('')}`;
+    break;
+  case 'base58-decode':
+    methodBody = `function(i){var a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',n=0n,o='';i=i.trim();for(var c=0;c<i.length;c++){var idx=a.indexOf(i[c]);if(idx===-1)continue;n=n*58n+BigInt(idx)}var h=n.toString(16);if(h.length%2)h='0'+h;for(var z=0;z<i.length&&i[z]==='1';z++){o+='\\x00'}return decodeURIComponent('%'+h.match(/.{2}/g).join('%'))}`;
+    break;
+  case 'hex-encode':
+    methodBody = `function(i){var h='',b;for(var n=0;n<i.length;n++){b=i.charCodeAt(n);h+=('0'+b.toString(16)).slice(-2)}return h}`;
+    break;
+  case 'hex-decode':
+    methodBody = `function(i){var o='',h=i.replace(/[^0-9a-fA-F]/g,'');if(h.length%2)throw new Error('Hex string length must be even');for(var n=0;n<h.length;n+=2){o+=String.fromCharCode(parseInt(h.substr(n,2),16))}return o}`;
+    break;
+  case 'file-to-hex':
+    methodBody = `function(i){return i}`;
+    break;
+  case 'hex-to-file':
+    methodBody = `function(i){return i}`;
+    break;
+  case 'html-encode':
+    methodBody = `function(i){var d=document.createElement('textarea');d.textContent=i;return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}`;
+    break;
+  case 'html-decode':
+    methodBody = `function(i){var d=document.createElement('textarea');d.innerHTML=i;return d.textContent}`;
+    break;
+  case 'url-encode':
+    methodBody = `function(i){return encodeURIComponent(i)}`;
+    break;
+  case 'url-decode':
+    methodBody = `function(i){return decodeURIComponent(i)}`;
+    break;
+  default:
+    methodBody = `function(i){return i}`;
+}
+---
+
+<ToolLayout tool={tool}>
+  <script is:inline set:html={`window.method=${methodBody};`}></script>
+</ToolLayout>

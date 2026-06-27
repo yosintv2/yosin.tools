@@ -1,0 +1,60 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  breadcrumb?: string[];
+}
+
+const { title, description, canonical, breadcrumb } = Astro.props;
+const site = 'https://singhyogendra.com.np';
+const url = canonical || site;
+const isTool = breadcrumb && breadcrumb.length > 0;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title} | YoSin Tools</title>
+  <meta name="description" content={description}>
+  <link rel="canonical" href={url}>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content={`${title} | YoSin Tools`}>
+  <meta property="og:description" content={description}>
+  <meta property="og:url" content={url}>
+  <meta property="og:site_name" content="YoSin Tools">
+  <meta property="og:image" content={`${site}/assets/images/logo.png`}>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={`${title} | YoSin Tools`}>
+  <meta name="twitter:description" content={description}>
+  <meta name="twitter:image" content={`${site}/assets/images/logo.png`}>
+  <link rel="icon" href="/assets/images/logo.svg">
+  <link rel="stylesheet" href="/css/style.css">
+  <script is:inline>var delayScripts=[];var waitLoadCount=0;if(localStorage.getItem('DARK')==='1')document.documentElement.classList.add('dark-theme')</script>
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "YoSin Tools",
+    "url": site,
+    "description": "Free online browser-based tools for hashing, encoding, and cryptography."
+  })}></script>
+  {isTool && breadcrumb && (
+  <script is:inline type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": breadcrumb.map((name, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": name,
+        "item": i === 0 ? site : url
+      }))
+    })}></script>
+  )}
+</head>
+<body>
+  <slot />
+  <div id="message"></div>
+</body>
+</html>

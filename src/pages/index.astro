@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Sidebar from '../components/Sidebar.astro';
+import Footer from '../components/Footer.astro';
+import { NAV, getTool, getPopularTools } from '../data/tools';
+
+const popularTools = getPopularTools();
+---
+
+<BaseLayout title="Free Online Hash, Encoding &amp; Crypto Tools" description="YoSin Tools: free browser-based online tools for MD5, SHA1, SHA256, SHA512, SHA3, Keccak, RIPEMD, BLAKE2, CRC checksums, HMAC, and more. No upload — 100% private, runs locally." canonical="https://singhyogendra.com.np">
+  <div id="app">
+    <Sidebar />
+
+    <div id="content">
+      <div class="top-nav">
+        <button id="sidebar-toggler" aria-controls="sidebar" aria-expanded="false" aria-label="Open menu">
+          <img src="/assets/images/menu.svg" width="22" height="22" alt="Menu">
+        </button>
+        <a class="mobile-brand" href="/">YoSin Tools</a>
+      </div>
+
+      <header>
+        <h1>YoSin Tools</h1>
+        <p>Free online developer tools for hashing, encoding, cryptography, and formatting. 100% browser-based — nothing is uploaded.</p>
+      </header>
+
+      <main>
+        <section class="ys-section">
+          <h2 class="ys-section-title">Popular Tools</h2>
+          <div class="tools-grid">
+            {popularTools.map(tool => (
+              <a class="tool-card" href={`/${tool.slug}`}>
+                <span class="tc-name">{tool.label}</span>
+                <span class="tc-desc">{tool.description.slice(0, 70)}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {NAV.map(section => (
+          <section class="ys-section">
+            <h2 class="ys-section-title">{section.section} Tools</h2>
+            <div class="tools-grid">
+              {section.groups.map(group =>
+                group.items.slice(0, 6).map(item => {
+                  const tool = getTool(item.slug);
+                  return (
+                    <a class="tool-card" href={`/${item.slug}`}>
+                      <span class="tc-name">{item.label}</span>
+                      {tool && <span class="tc-desc">{tool.description.slice(0, 70)}</span>}
+                    </a>
+                  );
+                })
+              )}
+            </div>
+          </section>
+        ))}
+
+        <section class="ys-section">
+          <h2 class="ys-section-title">Why YoSin Tools?</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+            <div class="tool-card" style="cursor:default">
+              <span class="tc-name">100% Private</span>
+              <span class="tc-desc">All processing happens in your browser. No data is ever uploaded to any server.</span>
+            </div>
+            <div class="tool-card" style="cursor:default">
+              <span class="tc-name">Fast &amp; Free</span>
+              <span class="tc-desc">No registration, no limits, no ads that track you. Just fast, reliable tools.</span>
+            </div>
+            <div class="tool-card" style="cursor:default">
+              <span class="tc-name">98+ Tools</span>
+              <span class="tc-desc">From MD5 to RSA, Base64 to JSON — everything you need in one place.</span>
+            </div>
+            <div class="tool-card" style="cursor:default">
+              <span class="tc-name">Works Offline</span>
+              <span class="tc-desc">Once loaded, most tools work without internet. Perfect for secure environments.</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  </div>
+
+  <script is:inline src="/js/sidebar-init.js"></script>
+  <script is:inline src="https://code.jquery.com/jquery-1.10.1.min.js" defer></script>
+  <script is:inline src="/js/googleads.js" defer></script>
+</BaseLayout>

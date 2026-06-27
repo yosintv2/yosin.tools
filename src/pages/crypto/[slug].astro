@@ -1,0 +1,52 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { ALL_TOOLS } from '../../data/tools';
+
+export async function getStaticPaths() {
+  return Object.values(ALL_TOOLS)
+    .filter(t => t.slug.startsWith('crypto/'))
+    .map(tool => ({
+      params: { slug: tool.slug.replace('crypto/', '') },
+      props: { tool }
+    }));
+}
+
+const { tool } = Astro.props;
+const slug = tool.slug.replace('crypto/', '');
+
+let loadScript = '';
+if (slug.startsWith('aes') || slug.startsWith('des') || slug.startsWith('triple-des') || slug.startsWith('rc4')) {
+  const isDecrypt = slug.includes('decrypt');
+  const algoKey = slug.includes('rc4') ? 'rc4' : slug.includes('des') ? 'des' : slug.includes('triple') ? 'triple-des' : 'aes';
+  const algo = slug.startsWith('triple-des') ? 'TripleDES' : slug.includes('des') ? 'DES' : slug.includes('rc4') ? 'RC4' : 'AES';
+  const prefix = algoKey;
+
+  if (isDecrypt) {
+    loadScript = `++waitLoadCount;delayScripts.push({src:'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js',onload:function(){window.method=function(input){var key=(document.getElementById('${prefix}-key')||document.getElementById('aes-key')||{}).value||'';var mode=(document.getElementById('${prefix}-mode')||document.getElementById('aes-mode')||{}).value||'CBC';var ivHex=(document.getElementById('${prefix}-iv')||document.getElementById('aes-iv')||{}).value||'';if(!key)throw new Error('Please enter a secret key.');var keyWA=CryptoJS.SHA256(key);var modeObj=CryptoJS.mode[mode]||CryptoJS.mode.CBC;var iv,ciphertext=input;if(mode!=='ECB'){if(ivHex){iv=CryptoJS.enc.Hex.parse(ivHex)}else if(input.includes(':')){var parts=input.split(':');iv=CryptoJS.enc.Hex.parse(parts[0]);ciphertext=parts.slice(1).join(':')}else{throw new Error('IV required')}}var decrypted=CryptoJS.${algo}.decrypt(ciphertext,keyWA,{mode:modeObj,padding:CryptoJS.pad.Pkcs7,iv:iv||undefined});return decrypted.toString(CryptoJS.enc.Utf8)||'Decryption failed'};methodLoad();}});`;
+  } else {
+    loadScript = `++waitLoadCount;delayScripts.push({src:'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js',onload:function(){window.method=function(input){var key=(document.getElementById('${prefix}-key')||document.getElementById('aes-key')||{}).value||'';var mode=(document.getElementById('${prefix}-mode')||document.getElementById('aes-mode')||{}).value||'CBC';var ivHex=(document.getElementById('${prefix}-iv')||document.getElementById('aes-iv')||{}).value||'';if(!key)throw new Error('Please enter a secret key.');var keyWA=CryptoJS.SHA256(key);var modeObj=CryptoJS.mode[mode]||CryptoJS.mode.CBC;var cfg={mode:modeObj,padding:CryptoJS.pad.Pkcs7};if(mode!=='ECB'){var iv=ivHex?CryptoJS.enc.Hex.parse(ivHex):CryptoJS.lib.WordArray.random(16);cfg.iv=iv}var encrypted=CryptoJS.${algo}.encrypt(input,keyWA,cfg);if(mode!=='ECB'&&!ivHex){return cfg.iv.toString(CryptoJS.enc.Hex)+':'+encrypted.toString()}return encrypted.toString()};methodLoad();}});`;
+  }
+} else if (slug.startsWith('ecdsa')) {
+  if (slug.includes('keygen')) {
+    loadScript = `window.method=function(){return'ECDSA key generation requires Web Crypto API.'};`;
+  } else if (slug.includes('sign')) {
+    loadScript = `window.method=function(i){return'ECDSA Sign: '+i};`;
+  } else {
+    loadScript = `window.method=function(i){return'ECDSA Verify: '+i};`;
+  }
+} else if (slug.startsWith('rsa')) {
+  if (slug.includes('keygen')) {
+    loadScript = `window.method=function(){return'RSA key generation requires Web Crypto API.'};`;
+  } else if (slug.includes('sign')) {
+    loadScript = `window.method=function(i){return'RSA Sign: '+i};`;
+  } else if (slug.includes('encrypt')) {
+    loadScript = `window.method=function(i){return'RSA Encrypt: '+i};`;
+  } else {
+    loadScript = `window.method=function(i){return'RSA Decrypt: '+i};`;
+  }
+}
+---
+
+<ToolLayout tool={tool}>
+  {loadScript && <script is:inline set:html={loadScript}></script>}
+</ToolLayout>

@@ -1,0 +1,28 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { ALL_TOOLS } from '../../data/tools';
+
+export async function getStaticPaths() {
+  return Object.values(ALL_TOOLS)
+    .filter(t => t.slug.startsWith('hash/'))
+    .map(tool => ({
+      params: { slug: tool.slug.replace('hash/', '') },
+      props: { tool }
+    }));
+}
+
+const { tool } = Astro.props;
+const methodFn = tool.methodFn || '';
+const jsFile = tool.jsFiles.length > 0 ? tool.jsFiles[0] : '';
+const slug = tool.slug.replace('hash/', '');
+
+// Build the method loading script
+let loadScript = '';
+if (jsFile && methodFn) {
+  loadScript = `++waitLoadCount;delayScripts.push({src:'/js/${jsFile}',onload:function(){window.method=${methodFn};methodLoad();}});++waitLoadCount;delayScripts.push({src:'/js/hmac.js'});`;
+}
+---
+
+<ToolLayout tool={tool}>
+  {loadScript && <script is:inline set:html={loadScript}></script>}
+</ToolLayout>

@@ -1,0 +1,44 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { ALL_TOOLS } from '../../data/tools';
+
+export async function getStaticPaths() {
+  return Object.values(ALL_TOOLS)
+    .filter(t => t.slug.startsWith('format/'))
+    .map(tool => ({
+      params: { slug: tool.slug.replace('format/', '') },
+      props: { tool }
+    }));
+}
+
+const { tool } = Astro.props;
+const slug = tool.slug.replace('format/', '');
+
+let methodBody = '';
+switch (slug) {
+  case 'json-formatter':
+    methodBody = `function(i){try{return JSON.stringify(JSON.parse(i),null,2)}catch(e){throw new Error('Invalid JSON: '+e.message)}}`;
+    break;
+  case 'json-minifier':
+    methodBody = `function(i){try{return JSON.stringify(JSON.parse(i))}catch(e){throw new Error('Invalid JSON: '+e.message)}}`;
+    break;
+  case 'json-validator':
+    methodBody = `function(i){try{JSON.parse(i);return'Valid JSON!'}catch(e){throw new Error('Invalid JSON: '+e.message)}}`;
+    break;
+  case 'xml-formatter':
+    methodBody = `function(i){var r='',d=0,t=i.replace(/>\\s*</g,'><');t.replace(/<\\/?[^>]+>|[^<]+/g,function(m){if(m.startsWith('</')){d--}r+='  '.repeat(Math.max(0,d))+m+'\\n';if(/<[^/!?]/.test(m)&&!/\\/>$/.test(m)){d++}});return r.trim()}`;
+    break;
+  case 'xml-minifier':
+    methodBody = `function(i){return i.replace(/>\\s+</g,'><').replace(/<!--[\\s\\S]*?-->/g,'').trim()}`;
+    break;
+  case 'xml-validator':
+    methodBody = `function(i){var p=i.match(/<\\/?[^>]+>/g);if(!p)return'No XML tags found';var s=[];for(var n=0;n<p.length;n++){var t=p[n];if(t.startsWith('</')){var tag=t.slice(2,-1).split(/\\s/)[0];if(!s.length||s.pop()!==tag){throw new Error('Mismatched tag: '+tag)}}else if(!t.endsWith('/>')&&!t.startsWith('<?')){var tag=t.slice(1).split(/[\\s>]/)[0];s.push(tag)}}return s.length?'Unclosed tags: '+s.join(', '):'Valid XML!'}`;
+    break;
+  default:
+    methodBody = `function(i){return i}`;
+}
+---
+
+<ToolLayout tool={tool}>
+  <script is:inline set:html={`window.method=${methodBody};`}></script>
+</ToolLayout>

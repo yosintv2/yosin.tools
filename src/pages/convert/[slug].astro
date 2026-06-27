@@ -1,0 +1,20 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { ALL_TOOLS } from '../../data/tools';
+
+export async function getStaticPaths() {
+  return Object.values(ALL_TOOLS)
+    .filter(t => t.slug.startsWith('convert/'))
+    .map(tool => ({
+      params: { slug: tool.slug.replace('convert/', '') },
+      props: { tool }
+    }));
+}
+
+const { tool } = Astro.props;
+const methodScript = `window.method=function(i){if(!i)return'';var t=(document.getElementById('case-type')||{}).value||'lower';switch(t){case'lower':return i.toLowerCase();case'upper':return i.toUpperCase();case'title':return i.replace(/\\w\\S*/g,function(w){return w[0].toUpperCase()+w.slice(1).toLowerCase()});case'camel':return i.replace(/[^a-zA-Z0-9]+(.)/g,function(_,c){return c.toUpperCase()}).replace(/^[A-Z]/,function(c){return c.toLowerCase()});case'pascal':return i.replace(/[^a-zA-Z0-9]+(.)/g,function(_,c){return c.toUpperCase()}).replace(/^[a-z]/,function(c){return c.toUpperCase()});case'snake':return i.replace(/[^a-zA-Z0-9]+/g,'_').toLowerCase();case'kebab':return i.replace(/[^a-zA-Z0-9]+/g,'-').toLowerCase();case'constant':return i.replace(/[^a-zA-Z0-9]+/g,'_').toUpperCase();default:return i}};`;
+---
+
+<ToolLayout tool={tool}>
+  <script is:inline set:html={methodScript}></script>
+</ToolLayout>

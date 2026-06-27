@@ -1,0 +1,214 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Sidebar from '../components/Sidebar.astro';
+import Footer from '../components/Footer.astro';
+import EmbedCode from '../components/EmbedCode.astro';
+import { type ToolConfig, getTool } from '../data/tools';
+
+export interface Props {
+  tool: ToolConfig;
+}
+
+const { tool } = Astro.props;
+const canonical = `https://singhyogendra.com.np/${tool.slug}`;
+
+// Collect related tool data
+const relatedTools = tool.relatedTools
+  .map(slug => getTool(slug))
+  .filter(Boolean) as ToolConfig[];
+---
+
+<BaseLayout title={tool.label} description={tool.description} canonical={canonical} breadcrumb={tool.breadcrumb}>
+  <div id="app">
+    <Sidebar currentSlug={tool.slug} currentSection={tool.section} currentGroup={tool.group} />
+
+    <div id="content">
+      <div class="top-nav">
+        <button id="sidebar-toggler" aria-controls="sidebar" aria-expanded="false" aria-label="Open menu">
+          <img src="/assets/images/menu.svg" width="22" height="22" alt="Menu">
+        </button>
+        <a class="mobile-brand" href="/">YoSin Tools</a>
+      </div>
+
+      <header>
+        <nav class="breadcrumb">
+            {tool.breadcrumb.map((crumb, i) => (
+              <>{i > 0 && <span class="sep">›</span>}{i < tool.breadcrumb.length - 1
+                ? <a href={i === 0 ? '/' : '#'}>{crumb}</a>
+                : <span>{crumb}</span>
+              }</>
+          ))}
+        </nav>
+        <h1>{tool.label}</h1>
+        <p>{tool.longDescription}</p>
+      </header>
+
+      <div class="ad-wrap-header"><div class="ad-container" id="ad-below-header"></div></div>
+
+      <main>
+        <div class="layout">
+          <div class="layout-block">
+            <div class="input">
+              <div class="block block-fill">
+                <div class="block-title">
+                  Input
+                  <div class="toolbar">
+                    <button class="icon" data-toggle="fullscreen">
+                      <img class="fullscreen-icon" src="/assets/images/fullscreen.svg" alt="Full screen">
+                      <img class="fullscreen-icon-exit" src="/assets/images/fullscreen-exit.svg" alt="Exit">
+                    </button>
+                  </div>
+                </div>
+                {tool.hasFileInput ? (
+                  <div class="droppable-zone" id="droppable-zone">
+                    <div class="droppable-zone-wrapper">
+                      <img class="droppable-zone-icon" src="/assets/images/file.svg" alt="File">
+                      <div class="droppable-zone-text">Drop a file here or click to browse</div>
+                    </div>
+                    <input type="file" class="droppable-file" id="file-input">
+                  </div>
+                ) : (
+                  <textarea class="container" id="input" spellcheck="false" placeholder={tool.placeholder} data-remember="input" data-share="input" data-auto-update></textarea>
+                )}
+              </div>
+            </div>
+
+            <div class="output">
+              <div class="block block-fill">
+                <div class="block-title">
+                  Output
+                  <div class="toolbar">
+                    <button class="icon" data-toggle="copy" data-clipboard-target="#output" data-message="Output copied">
+                      <img src="/assets/images/copy.svg" alt="Copy">
+                    </button>
+                    <button class="icon" data-toggle="fullscreen">
+                      <img class="fullscreen-icon" src="/assets/images/fullscreen.svg" alt="Full screen">
+                      <img class="fullscreen-icon-exit" src="/assets/images/fullscreen-exit.svg" alt="Exit">
+                    </button>
+                  </div>
+                </div>
+                <textarea class="container" id="output" spellcheck="false" placeholder="Output here…" readonly></textarea>
+              </div>
+
+              <details class="block text-only" data-toggle="copyblock">
+                <summary class="block-title">
+                  Share Link
+                  <div class="toolbar">
+                    <button class="icon" data-toggle="copy" data-clipboard-target="#share-link" data-message="Share link copied">
+                      <img src="/assets/images/copy.svg" alt="Copy">
+                    </button>
+                  </div>
+                </summary>
+                <input id="share-link" type="text" placeholder="Share link" readonly>
+              </details>
+
+              <EmbedCode slug={tool.slug} label={tool.label} />
+            </div>
+          </div>
+
+          <div class="settings">
+            <div class="block block-fill">
+              <div class="block-title">Settings</div>
+              <div class="container" id="settings-container">
+                {tool.settings.map(setting => (
+                  setting.type === 'button' ? (
+                    <div class="setting">
+                      <a class="btn" id={setting.id}>{setting.label || tool.btnLabel}</a>
+                    </div>
+                  ) : setting.type === 'checkbox' ? (
+                    <div class="setting">
+                      <label class="switcher">
+                        <input type="checkbox" value="1" id={setting.id} checked={setting.defaultChecked} data-remember={setting.id} data-share={setting.id} data-auto-update>
+                        <div class="toggle"></div>
+                        <span>{setting.label}</span>
+                      </label>
+                    </div>
+                  ) : setting.type === 'select' ? (
+                    <div class="setting">
+                      <label for={setting.id}>{setting.label}</label>
+                      <select id={setting.id} data-toggle="encoding" data-remember={setting.id} data-share={setting.id} data-auto-update {...(setting.attrs || {})}>
+                        {setting.options?.map(opt => (
+                          <option value={opt.value} selected={opt.selected} {...(opt.attrs || {})}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : setting.type === 'input' ? (
+                    <div class="setting">
+                      <label for={setting.id}>{setting.label}</label>
+                      <input type="text" id={setting.id} placeholder={setting.placeholder} data-remember={setting.id} data-share={setting.id}>
+                    </div>
+                  ) : setting.type === 'details' ? (
+                    <details class="setting-group" id={setting.id} style={setting.display ? `display:${setting.display}` : ''} open>
+                      <summary>{setting.label}</summary>
+                      {setting.children?.map(child => (
+                        child.type === 'select' ? (
+                          <div class="setting">
+                            <label for={child.id}>{child.label}</label>
+                            <select id={child.id} data-toggle="encoding" data-remember={child.id} data-share={child.id} {...(child.attrs || {})}>
+                              {child.options?.map(opt => (
+                                <option value={opt.value} selected={opt.selected} {...(opt.attrs || {})}>{opt.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : child.type === 'input' ? (
+                          <div class="setting">
+                            <label for={child.id}>{child.label}</label>
+                            <input type="text" id={child.id} placeholder={child.placeholder} data-remember={child.id} data-share={child.id} data-auto-update>
+                          </div>
+                        ) : null
+                      ))}
+                    </details>
+                  ) : null
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ad-wrap"><div class="ad-container" id="ad-inline"></div></div>
+
+        {relatedTools.length > 0 && (
+          <section class="ys-section">
+            <h2 class="ys-section-title">Related Tools</h2>
+            <div class="tools-grid">
+              {relatedTools.map(rel => (
+                <a class="tool-card" href={`/${rel.slug}`}>
+                  <span class="tc-name">{rel.label}</span>
+                  <span class="tc-desc">{rel.description.slice(0, 60)}</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {tool.faq.length > 0 && (
+          <section class="ys-section">
+            <h2 class="ys-section-title">Frequently Asked Questions</h2>
+            <div class="faq-list">
+              {tool.faq.map(item => (
+                <details class="faq-item">
+                  <summary>{item.q}</summary>
+                  <div class="faq-body" set:html={item.a}></div>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {tool.seoContent && (
+          <div class="seo-content" set:html={tool.seoContent}></div>
+        )}
+      </main>
+
+      <div class="ad-wrap-bottom"><div class="ad-container" id="ad-bottom"></div></div>
+      <Footer />
+    </div>
+  </div>
+
+  <script is:inline src="/js/sidebar-init.js"></script>
+  <script is:inline src="https://code.jquery.com/jquery-1.10.1.min.js" defer></script>
+  <script is:inline src="/js/googleads.js" defer></script>
+  <script is:inline src="/js/site-init.js"></script>
+  <script is:inline src="/js/main.js" defer></script>
+  <slot />
+</BaseLayout>

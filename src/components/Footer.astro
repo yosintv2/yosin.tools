@@ -1,0 +1,30 @@
+---
+import { NAV, ALL_TOOLS } from '../data/tools';
+---
+
+<footer id="site-footer">
+  <div class="footer-grid">
+    {NAV.slice(0, 4).map(section => (
+      <div class="footer-col">
+        <h4>{section.section}</h4>
+        <ul>
+          {section.groups.slice(0, 3).map(group =>
+            group.items.slice(0, 4).map(item => (
+              <li><a href={`/${item.slug}`}>{item.label}</a></li>
+            ))
+          )}
+        </ul>
+      </div>
+    ))}
+    <div class="footer-col">
+      <h4>YoSin Tools</h4>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/hash/md5">MD5</a></li>
+        <li><a href="/hash/sha256">SHA256</a></li>
+        <li><a href="/encode/base64-encode">Base64</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="footer-copy">&copy; 2025 YoSin Tools &middot; singhyogendra.com.np &middot; All rights reserved.</p>
+</footer>

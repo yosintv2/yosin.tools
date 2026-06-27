@@ -1,0 +1,15 @@
+{
+  "name": "yosin-tools",
+  "type": "module",
+  "version": "2.0.0",
+  "description": "YoSin Tools — Free Online Hash, Encoding & Crypto Tools",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.0.0"
+  }
+}

@@ -1,0 +1,64 @@
+---
+import { NAV } from '../data/tools';
+
+export interface Props {
+  currentSlug?: string;
+  currentSection?: string;
+  currentGroup?: string;
+}
+
+const { currentSlug, currentSection, currentGroup } = Astro.props;
+
+function isActive(slug: string): boolean {
+  return currentSlug === slug;
+}
+
+function isGroupActive(items: { slug: string }[]): boolean {
+  return items.some(i => isActive(i.slug));
+}
+---
+
+<div id="sidebar">
+  <div class="mask"></div>
+  <div class="container">
+    <header>
+      <a href="/">
+        <img src="/assets/images/logo.svg" width="22" height="22" alt="YoSin Tools">
+        <h2>YoSin Tools</h2>
+      </a>
+      <div class="toolbar">
+        <button class="theme" id="theme-toggle" title="Toggle dark mode">
+          <img class="light" src="/assets/images/light.svg" alt="Dark">
+          <img class="dark" src="/assets/images/dark.svg" alt="Light">
+        </button>
+      </div>
+    </header>
+    <div class="sidebar-search">
+      <input type="text" id="tool-search" placeholder="Search tools…" autocomplete="off">
+    </div>
+    {NAV.map(section => (
+      <div class="section">
+        <h3>{section.section}</h3>
+        {section.groups.map(group => {
+          const gActive = isGroupActive(group.items);
+          return (
+            <details class={gActive ? 'active' : ''} open={gActive}>
+              <summary>{group.name}</summary>
+              <nav><ol>
+                {group.items.map(item => (
+                  <li class={isActive(item.slug) ? 'active' : ''}>
+                    <a href={`/${item.slug}`}>{item.label}</a>
+                  </li>
+                ))}
+              </ol></nav>
+            </details>
+          );
+        })}
+      </div>
+    ))}
+    <div class="section">
+      <h3>Links</h3>
+      <nav class="links"><ol><li><a href="/">Home</a></li></ol></nav>
+    </div>
+  </div>
+</div>
